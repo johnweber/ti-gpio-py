@@ -690,6 +690,7 @@ class SW_PWM(object):
         self._duty_cycle_percent = 0.0
         self._basetime           = 1000.0/self._frequency_hz # ms
         self._slicetime          = self._basetime/100.0
+        self._min_on_time        = self._slicetime/256.0
         self._stop_thread        = False
         self._calculate_times()
         _channel_configuration[channel] = OUT
@@ -705,8 +706,8 @@ class SW_PWM(object):
         print("_off_time           = ", self._off_time)
 
     def _calculate_times(self):
-        self._on_time  = (self._duty_cycle_percent * self._slicetime)/1000
-        self._off_time = ((100.0 - self._duty_cycle_percent) * self._slicetime)/1000
+        self._updated_on_time  = (self._duty_cycle_percent * self._slicetime)/1000
+        self._updated_off_time = ((100.0 - self._duty_cycle_percent) * self._slicetime)/1000
 
     def __del__(self):
         if self._init:
@@ -729,13 +730,29 @@ class SW_PWM(object):
 
     def _pwm_device(self):
         self._started = True
+        
+        # Initialize on/off times
+        self._on_time = self._updated_on_time
+        self._off_time = self._updated_off_time
 
+        # Loop
         while self._stop_thread == False:
-            GPIO.output(self._ch_info.channel, GPIO.HIGH)
-            time.sleep(self._on_time)
+           
+            # Update the on/off times if they have changed. Do this only once
+            # per PWM period
+            if self._on_time != self._updated_on_time:
+                self._on_time = self._updated_on_time
+                self._off_time = self._updated_off_time
+            
+            # If we are not supposed to turn on, then lets not turn on
+            if self._on_time > self._min_on_time:
+                GPIO.output(self._ch_info.channel, GPIO.HIGH)
+                time.sleep(self._on_time)
 
-            GPIO.output(self._ch_info.channel, GPIO.LOW)
-            time.sleep(self._off_time)
+             # If the off time is greater than the min on time 
+            if self._off_time > self._min_on_time: 
+                GPIO.output(self._ch_info.channel, GPIO.LOW)
+                time.sleep(self._off_time)
 
         self._started = False
 
