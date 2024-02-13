@@ -1,5 +1,6 @@
 # Copyright (c) 2018-2020, NVIDIA CORPORATION. All rights reserved.
 # Copyright (c) 2021-2023, Texas Instruments Incorporated. All rights reserved.
+# Copyright (c) 2023, TechNexion Ltd. All rights reserved.
 # Permission is hereby granted, free of charge, to any person obtaining a
 # copy of this software and associated documentation files (the "Software"),
 # to deal in the Software without restriction, including without limitation
@@ -23,6 +24,7 @@ import os.path
 import sys
 
 J721E_SK = 'J721E_SK'
+J721E_ROVY_EVM = 'J721E_ROVY_EVM'
 AM68_SK  = 'AM68_SK'
 AM69_SK  = 'AM69_SK'
 
@@ -51,7 +53,7 @@ PWM_ID_ENTRY        = 7
 # The values are used to generate dictionaries that map the corresponding pin
 # mode numbers to the Linux GPIO pin number and GPIO chip directory
 
-J721E_SK_PIN_DEFS = [
+""" J721E_SK_PIN_DEFS = [
 #   OFFSET     sysfs_dir    BOARD BCM SOC_NAME   PWM_SysFs       PWM_Id
     ( 84, {}, "600000.gpio",  3,   2, 'GPIO0_84',  None,          None),
     ( 83, {}, "600000.gpio",  5,   3, 'GPIO0_83',  None,          None),
@@ -80,11 +82,43 @@ J721E_SK_PIN_DEFS = [
     (  3, {}, "600000.gpio", 38,  20, 'GPIO0_3',   None,          None),
     (  4, {}, "600000.gpio", 40,  21, 'GPIO0_4',   None,          None)
 ]
+ """
+# HACK - replace SK pin defs with ROVY-EVM pin defs.
+# J721E_ROVY_EVM_PIN_DEFS = [
+J721E_SK_PIN_DEFS = [
+#   OFFSET     sysfs_dir    BOARD BCM SOC_NAME   PWM_SysFs       PWM_Id
+    (  5, {}, "600000.gpio", 11,  17, 'GPIO0_5',   None,          None),
+    ( 85, {}, "600000.gpio", 12,  18, 'GPIO0_85',  None,          None),
+    (  7, {}, "600000.gpio", 13,  27, 'GPIO0_7',   None,          None),
+    ( 10, {}, "600000.gpio", 15,  22, 'GPIO0_10',  None,          None),
+    ( 16, {}, "600000.gpio", 16,  23, 'GPIO0_16',  None,          None),
+    ( 17, {}, "600000.gpio", 18,  24, 'GPIO0_17',  None,          None),
+    (119, {}, "600000.gpio", 19,  10, 'GPIO0_119', None,          None),
+    (120, {}, "600000.gpio", 21,   9, 'GPIO0_120', None,          None),
+    ( 14, {}, "600000.gpio", 22,  25, 'GPIO0_14',  None,          None),
+    (118, {}, "600000.gpio", 23,  11, 'GPIO0_118', None,          None),
+    (116, {}, "600000.gpio", 24,   8, 'GPIO0_116', None,          None),
+    (117, {}, "600000.gpio", 26,   7, 'GPIO0_117', None,          None),
+    ( 12, {}, "600000.gpio", 29,   5, 'GPIO0_12',  None,          None),
+    ( 13, {}, "600000.gpio", 31,   6, 'GPIO0_13',  None,          None),
+    ( 13, {}, "601000.gpio", 32,  12, 'GPIO1_13',  None,          None),
+    ( 90, {}, "600000.gpio", 33,  13, 'GPIO0_90',  '3010000.pwm', 0   ),
+    ( 86, {}, "600000.gpio", 35,  19, 'GPIO0_86',  None,          None),
+    ( 89, {}, "600000.gpio", 36,  16, 'GPIO0_89',  '3000000.pwm', 1   ),
+    ( 88, {}, "600000.gpio", 38,  20, 'GPIO0_88',  '3000000.pwm', 0   ),
+    ( 87, {}, "600000.gpio", 40,  21, 'GPIO0_87',  None,          None)
+]
 
 compats_j721e = (
     'ti,j721e-sk',
     'ti,j721e',
 )
+
+
+"""
+compats_j721e_rovy = (
+     'tn,j721e-rovy-evm',
+) """
 
 AM68_SK_PIN_DEFS = [
 #   OFFSET     sysfs_dir      BOARD BCM SOC_NAME    PWM_SysFs  PWM_Id
@@ -167,7 +201,6 @@ board_gpio_data = {
             'PROCESSOR': 'ARM A72'
         }
     ),
-
     AM68_SK: (
         AM68_SK_PIN_DEFS,
         {
@@ -237,7 +270,7 @@ WARNING: Cannot determine whether the expected SK board is present.
                 break
         if not found:
             msg = """\
-WARNING: Carrier board is not from a SK Developer Kit.
+WARNING: Carrier board is not from a supported developer kit.
 WARNNIG: TI.GPIO library has not been verified with this carrier board,
 WARNING: and in fact is unlikely to work correctly.
 """
@@ -245,6 +278,9 @@ WARNING: and in fact is unlikely to work correctly.
 
     if matches(compats_j721e):
         model = J721E_SK
+    elif matches(compats_j721e_rovy):
+
+        model = J721E_ROVY_EVM
     elif matches(compats_am68sk):
         model = AM68_SK
     elif matches(compats_am69sk):
